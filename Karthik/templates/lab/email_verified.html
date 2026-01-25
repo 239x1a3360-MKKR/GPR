@@ -1,0 +1,47 @@
+{% extends 'lab/base.html' %}
+
+{% block title %}Email Verification - CodeNextLab{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box" style="max-width: 500px;">
+        {% if success %}
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 4rem; color: #28a745;">✓</div>
+            <h2 style="color: #28a745;">Email Verified!</h2>
+        </div>
+
+        <div
+            style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <p style="margin: 0;">{{ message }}</p>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="{% url 'lab:index' %}" class="btn btn-primary"
+                style="width: 100%; text-align: center; display: block;">
+                Go to CodeNextLab
+            </a>
+        </div>
+        {% else %}
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 4rem; color: #dc3545;">✗</div>
+            <h2 style="color: #dc3545;">Verification Failed</h2>
+        </div>
+
+        <div
+            style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #dc3545;">
+            <p style="margin: 0;">{{ message }}</p>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="{% url 'lab:resend_verification' %}" class="btn btn-primary"
+                style="width: 100%; text-align: center; display: block;">
+                Resend Verification Email
+            </a>
+            <a href="{% url 'lab:login' %}" style="display: block; text-align: center; margin-top: 10px;">Back to
+                Login</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

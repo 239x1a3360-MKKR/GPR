@@ -1,0 +1,36 @@
+{% extends 'lab/base.html' %}
+
+{% block title %}Resend Verification - CodeNextLab{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Resend Verification Email</h2>
+
+        {% if message %}
+        {% if error %}
+        <div class="error-message">{{ message }}</div>
+        {% else %}
+        <div
+            style="background: #d4edda; color: #155724; padding: 0.75rem; border-radius: 5px; margin-bottom: 1rem; border: 1px solid #c3e6cb;">
+            {{ message }}
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <form method="post" action="{% url 'lab:resend_verification' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="your.email@gprec.ac.in" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Resend Verification Email</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'lab:login' %}">Back to Login</a> |
+            <a href="{% url 'lab:register' %}">Register New Account</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

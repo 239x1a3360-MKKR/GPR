@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Import Users from CSV{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:auth_user_changelist' %}">Users</a>
+    &rsaquo; Import CSV
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import Users from CSV</h1>
+
+<div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+    <h2>CSV Format</h2>
+    <p>Your CSV file should have the following columns:</p>
+    <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+        <thead>
+            <tr style="background: #e0e0e0;">
+                <th style="border: 1px solid #ddd; padding: 8px;">Column</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Required</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>username</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Unique username for login</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>email</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Valid email address</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>password</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Login password (will be hashed)</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>branch</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">e.g., CSE, ECE, EEE</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>year</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">1, 2, 3, or 4 (default: 1)</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>semester</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">1 or 2 (default: 1)</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>gender</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Male, Female, or Other</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="margin-top: 20px;">Example CSV:</h3>
+    <pre style="background: white; padding: 10px; border: 1px solid #ddd; overflow-x: auto;">
+username,email,password,branch,year,semester,gender
+"21VB1A0501","student1@gprec.ac.in","pass123","CSE",1,1,"Male"
+"21VB1A0502","student2@gprec.ac.in","pass456","ECE",2,2,"Female"
+    </pre>
+</div>
+
+<form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+    {% csrf_token %}
+    <div style="margin-bottom: 15px;">
+        <label for="csv_file" style="display: block; margin-bottom: 5px; font-weight: bold;">Select CSV File:</label>
+        <input type="file" name="csv_file" accept=".csv" required style="padding: 5px;">
+    </div>
+    <div>
+        <input type="submit" value="Import Users" class="default"
+            style="padding: 10px 20px; background: #667eea; color: white; border: none; cursor: pointer; border-radius: 3px;">
+        <a href="{% url 'admin:auth_user_changelist' %}"
+            style="margin-left: 10px; padding: 10px 20px; background: #ba2121; color: white; text-decoration: none; border-radius: 3px; display: inline-block;">Cancel</a>
+    </div>
+</form>
+{% endblock %}

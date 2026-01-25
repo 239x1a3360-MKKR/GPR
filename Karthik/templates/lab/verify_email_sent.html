@@ -1,0 +1,50 @@
+{% extends 'lab/base.html' %}
+
+{% block title %}Email Verification - CodeNextLab{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box" style="max-width: 600px;">
+        <h2>📧 Verification Email Sent</h2>
+
+        <div
+            style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #417690;">
+            <p><strong>We've sent a verification link to:</strong></p>
+            <p style="font-size: 1.1rem; color: #417690; font-weight: bold;">{{ email }}</p>
+        </div>
+
+        {% if email_sent %}
+        <div
+            style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <p><strong>✓ Verification email sent successfully!</strong></p>
+            <p>Please check your email inbox and click the verification link.</p>
+        </div>
+        {% else %}
+        <div
+            style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <p><strong>⚠ Email sending failed. For Development/Testing:</strong></p>
+            <p>Click the link below to verify your email:</p>
+            <a href="{{ verification_url }}"
+                style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: #417690; color: white; text-decoration: none; border-radius: 5px;">
+                Verify Email Now
+            </a>
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <p><strong>Note:</strong></p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>Check your email inbox for the verification link</li>
+                <li>Click the link to activate your account</li>
+                <li>If you didn't receive the email, check your spam folder</li>
+                <li>You can use the link above for immediate verification (development mode)</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p>Didn't receive the email? <a href="{% url 'lab:resend_verification' %}">Resend verification email</a></p>
+            <p><a href="{% url 'lab:login' %}">Back to Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

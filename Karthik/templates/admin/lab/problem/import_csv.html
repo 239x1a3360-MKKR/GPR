@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Import Problems from CSV{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:lab_problem_changelist' %}">Problems</a>
+    &rsaquo; Import CSV
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import Problems from CSV</h1>
+
+<div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+    <h2>CSV Format</h2>
+    <p>Your CSV file should have the following columns:</p>
+    <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+        <thead>
+            <tr style="background: #e0e0e0;">
+                <th style="border: 1px solid #ddd; padding: 8px;">Column</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Required</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>title</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Problem title</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>description</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Yes</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Problem description</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>difficulty</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">easy, medium, or hard (default: easy)</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>is_active</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">true or false (default: true)</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>test_input</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Input for test case</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>test_output</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Expected output for test case</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>is_sample</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">true (shown to students) or false (hidden, for
+                    evaluation only) - default: false</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>topic</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">No</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">Name of the topic (e.g., Arrays, Loops). Will be
+                    created if it doesn't exist.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 style="margin-top: 20px;">Example CSV:</h3>
+    <pre style="background: white; padding: 10px; border: 1px solid #ddd; overflow-x: auto;">
+title,description,difficulty,is_active,test_input,test_output,is_sample,topic
+"Sum of Two Numbers","Write a program to add two numbers",easy,true,"5 3","8",true,"Basics"
+"Factorial","Calculate factorial of a number",medium,true,"5","120",true,"Recursion"
+    </pre>
+</div>
+
+<form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+    {% csrf_token %}
+    <div style="margin-bottom: 15px;">
+        <label for="csv_file" style="display: block; margin-bottom: 5px; font-weight: bold;">Select CSV File:</label>
+        <input type="file" name="csv_file" accept=".csv" required style="padding: 5px;">
+    </div>
+    <div>
+        <input type="submit" value="Import Problems" class="default"
+            style="padding: 10px 20px; background: #417690; color: white; border: none; cursor: pointer; border-radius: 3px;">
+        <a href="{% url 'admin:lab_problem_changelist' %}"
+            style="margin-left: 10px; padding: 10px 20px; background: #ba2121; color: white; text-decoration: none; border-radius: 3px; display: inline-block;">Cancel</a>
+    </div>
+</form>
+{% endblock %}

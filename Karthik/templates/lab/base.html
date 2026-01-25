@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CodeNextLab{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script>
+        // Apply theme early to prevent flash
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'system';
+            const html = document.documentElement;
+            if (savedTheme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                html.setAttribute('data-theme', systemTheme);
+            } else {
+                html.setAttribute('data-theme', savedTheme);
+            }
+        })();
+    </script>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body style="position: relative; background: #f8fafc;">
+    <!-- Global 3D Background -->
+    <div id="three-container"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;"></div>
+
+    <nav class="navbar" style="position: relative; z-index: 10;">
+        <div class="nav-container">
+            <a href="{% url 'lab:index' %}" style="text-decoration: none;">
+                <h1 class="nav-logo">CodeNextLab</h1>
+            </a>
+            <div class="nav-links">
+                <div class="theme-switcher">
+                    <button id="theme-toggle" class="nav-link" title="Switch Theme"
+                        style="background: none; border: none; cursor: pointer; padding: 0.5rem;">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                    <div id="theme-menu" class="theme-menu"
+                        style="display: none; position: absolute; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 0.5rem; z-index: 1000; right: 0; min-width: 120px;">
+                        <button onclick="setTheme('light')" class="theme-item"><i class="fas fa-sun"></i> Light</button>
+                        <button onclick="setTheme('dark')" class="theme-item"><i class="fas fa-moon"></i> Dark</button>
+                        <button onclick="setTheme('system')" class="theme-item"><i class="fas fa-desktop"></i>
+                            System</button>
+                    </div>
+                </div>
+                {% if user.is_authenticated %}
+                <span class="user-info">Welcome, {{ user.username }}</span>
+                <a href="{% url 'lab:problems_list' %}" class="nav-link">Problems</a>
+                <a href="{% url 'lab:editor' %}" class="nav-link">Editor</a>
+                <a href="{% url 'lab:profile_settings' %}" class="nav-link">Account Settings</a>
+                <a href="#" class="nav-link" onclick="showSubmissions()">Submissions</a>
+                {% if user.userprofile.role == 'admin' %}
+                <a href="/admin/" class="nav-link" target="_blank">Admin Panel</a>
+                {% endif %}
+                <a href="{% url 'lab:logout' %}" class="nav-link">Logout</a>
+                {% else %}
+                <a href="{% url 'lab:login' %}" class="nav-link">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Submissions Modal -->
+    <div id="submissions-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeSubmissions()">&times;</span>
+            <h2>Submission History</h2>
+            <div id="submissions-list"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/static/js/three-background.js"></script>
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,759 @@
+{% extends 'lab/base.html' %}
+
+{% block title %}{{ problem.title }} - CodeNextLab{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<style>
+    /* Global Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .problem-detail-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem 2rem;
+        height: calc(100vh - 80px);
+        /* Adjust based on navbar height */
+        display: flex;
+        flex-direction: column;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .problem-header-wrapper {
+        margin-bottom: 1rem;
+        background: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.3s ease;
+    }
+
+    .problem-header-wrapper:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .workspace-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        /* Prevent body scroll */
+        gap: 0;
+        /* Gap handled by resizer */
+        position: relative;
+    }
+
+    /* Panels */
+    .problem-info {
+        width: 40%;
+        min-width: 300px;
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        overflow-y: auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .editor-section {
+        flex: 1;
+        min-width: 400px;
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin-left: 10px;
+        /* Space for aesthetic separation if preferred, or rely on resizer margin */
+    }
+
+    /* Resizer */
+    .resizer {
+        width: 8px;
+        cursor: col-resize;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        transition: background 0.3s;
+        z-index: 10;
+        margin: 0 4px;
+    }
+
+    .resizer::after {
+        content: "";
+        width: 4px;
+        height: 40px;
+        background: #cbd5e0;
+        border-radius: 2px;
+        transition: background 0.3s;
+    }
+
+    .resizer:hover::after,
+    .resizer.resizing::after {
+        background: #667eea;
+    }
+
+    /* Problem Description Styling */
+    .problem-title h2 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+
+    .difficulty-badge {
+        padding: 0.35rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .problem-description {
+        line-height: 1.7;
+        color: #4a5568;
+        font-size: 1.05rem;
+    }
+
+    .test-cases-section {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed #cbd5e0;
+    }
+
+    .test-case {
+        background: #f7fafc;
+        border: 1px solid #edf2f7;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .test-case:hover {
+        border-left: 4px solid #667eea;
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .test-input,
+    .test-output {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 0.75rem;
+        border-radius: 6px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Editor Styling */
+    .editor-wrapper {
+        flex-grow: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .CodeMirror {
+        height: 100% !important;
+        font-size: 15px;
+        font-family: 'Fira Code', 'Consolas', monospace;
+    }
+
+    .editor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .editor-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1.5px solid transparent;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        position: relative;
+        white-space: nowrap;
+        min-width: fit-content;
+    }
+
+    .btn-secondary {
+        background: #4a5568;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-secondary:hover {
+        background: #2d3748;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #00b4db, #0083b0);
+        border: none;
+        box-shadow: 0 2px 5px rgba(0, 180, 219, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        box-shadow: 0 2px 5px rgba(118, 75, 162, 0.4);
+    }
+
+    /* Loading & Results */
+    .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.9);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .test-results {
+        max-height: 30%;
+        min-height: 150px;
+        overflow-y: auto;
+        background: #282a36;
+        /* Dark theme for results */
+        color: #f8f8f2;
+        border-radius: 8px;
+        margin-top: 10px;
+        padding: 1rem;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .test-result-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #6272a4;
+        margin-bottom: 0.8rem;
+    }
+
+    .test-passed {
+        border-left-color: #50fa7b;
+    }
+
+    .test-failed {
+        border-left-color: #ff5555;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    @media (max-width: 1024px) {
+        .workspace-container {
+            flex-direction: column;
+        }
+
+        .problem-info {
+            width: 100%;
+            height: auto;
+            max-height: 40vh;
+        }
+
+        .resizer {
+            display: none;
+        }
+
+        .editor-section {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="problem-detail-container">
+    <div class="problem-header-wrapper">
+        <div class="problem-title-section">
+            <h2 style="margin: 0; font-size: 1.5rem; color: #2d3748;">{{ problem.title }}</h2>
+        </div>
+        <div class="problem-meta-badges" style="display: flex; gap: 10px;">
+            <span class="difficulty-badge difficulty-{{ problem.difficulty }}">{{ problem.difficulty|capfirst }}</span>
+            <span class="difficulty-badge" style="background: #edf2f7; color: #4a5568;">Points: {{ problem.points
+                }}</span>
+        </div>
+    </div>
+
+    <div class="workspace-container" id="workspace">
+        <!-- Left Panel: Problem Description -->
+        <div class="problem-info" id="leftPanel">
+            <div class="problem-description">{{ problem.description }}</div>
+
+            {% if sample_test_cases %}
+            <div class="test-cases-section">
+                <h3 style="color: #4a5568; margin-bottom: 1rem;">Sample Test Cases</h3>
+                {% for test_case in sample_test_cases %}
+                <div class="test-case">
+                    <h4 style="color: #667eea; margin-bottom: 0.5rem">Sample Case {{ forloop.counter }}</h4>
+                    <div><strong style="color: #718096; font-size: 0.85rem;">INPUT</strong></div>
+                    <div class="test-input">{{ test_case.input_data }}</div>
+                    <div style="margin-top: 0.8rem;"><strong style="color: #718096; font-size: 0.85rem;">EXPECTED
+                            OUTPUT</strong></div>
+                    <div class="test-output">{{ test_case.expected_output }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if user_submissions %}
+            <div class="submissions-history"
+                style="margin-top: 2rem; border-top: 2px solid #e0e0e0; padding-top: 2rem;">
+                <h3 style="color: #4a5568;">History</h3>
+                <div class="submissions-list">
+                    {% for submission in user_submissions %}
+                    <div class="submission-item">
+                        <div class="submission-header">
+                            <span style="font-weight: bold;">{{ submission.language|upper }}</span>
+                            <span class="submission-status status-{{ submission.status }}">{{ submission.status|capfirst
+                                }}</span>
+                        </div>
+                        <div class="submission-meta">
+                            {% if submission.total_test_cases > 0 %}
+                            <span style="margin-right: 10px;">Passed: {{ submission.test_cases_passed }}/{{
+                                submission.total_test_cases }}</span>
+                            {% endif %}
+                            <span>{{ submission.submitted_at|date:"M d, H:i" }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Resizer Handle -->
+        <div class="resizer" id="dragMe"></div>
+
+        <!-- Right Panel: Editor -->
+        <div class="editor-section" id="rightPanel">
+            <div class="editor-header">
+                <div class="language-selector">
+                    <label for="language" style="color: #4a5568; margin-right: 8px;">Language:</label>
+                    <select id="language" onchange="changeLanguage()"
+                        style="padding: 5px 10px; border-radius: 5px; border: 1px solid #cbd5e0;">
+                        <option value="python">Python 3</option>
+                        <option value="c">C</option>
+                        <option value="cpp">C++</option>
+                        <option value="java">Java</option>
+                    </select>
+                </div>
+                <div class="editor-actions">
+                    <button class="btn btn-secondary" onclick="resetCode()" title="Reset code to default boilerplate">
+                        <i class="fas fa-sync-alt"></i> Reset
+                    </button>
+                    <button class="btn btn-primary" onclick="runCode()" title="Test against sample cases">
+                        <i class="fas fa-play"></i> Run Code
+                    </button>
+                    <button class="btn btn-primary" onclick="submitSolution()"
+                        style="background: linear-gradient(135deg, #00b09b, #96c93d); box-shadow: 0 2px 4px rgba(0, 176, 155, 0.2);"
+                        title="Submit for evaluation">
+                        <i class="fas fa-rocket"></i> Submit
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-wrapper">
+                <textarea id="code-editor"></textarea>
+            </div>
+
+            <div id="test-results" class="test-results" style="display: none;"></div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <span style="margin-top: 10px; font-weight: 500; color: #4a5568;">Running your code...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+    let editor;
+    let currentLanguage = 'python';
+    const problemId = parseInt("{{ problem.id }}");
+
+    // --- Resizable Logic ---
+    document.addEventListener('DOMContentLoaded', function () {
+        const resizer = document.getElementById('dragMe');
+        const leftSide = document.getElementById('leftPanel');
+        const rightSide = document.getElementById('rightPanel');
+        const container = document.getElementById('workspace');
+
+        // Current mouse position
+        let x = 0;
+        let leftWidth = 0;
+
+        const mouseDownHandler = function (e) {
+            // Get the current mouse position
+            x = e.clientX;
+            leftWidth = leftSide.getBoundingClientRect().width;
+
+            // Attach the listeners to `document`
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+
+            resizer.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            leftSide.style.userSelect = 'none';
+            leftSide.style.pointerEvents = 'none';
+            rightSide.style.userSelect = 'none';
+            rightSide.style.pointerEvents = 'none';
+        };
+
+        const mouseMoveHandler = function (e) {
+            // How far the mouse has been moved
+            const dx = e.clientX - x;
+
+            const newLeftWidth = ((leftWidth + dx) * 100) / container.getBoundingClientRect().width;
+
+            // Limit the width to prevent collapse
+            if (newLeftWidth > 20 && newLeftWidth < 80) {
+                leftSide.style.width = `${newLeftWidth}%`;
+                // The right side will take up remaining space automatically due to flex
+            }
+        };
+
+        const mouseUpHandler = function () {
+            resizer.classList.remove('resizing');
+            document.body.style.removeProperty('cursor');
+            leftSide.style.removeProperty('user-select');
+            leftSide.style.removeProperty('pointer-events');
+            rightSide.style.removeProperty('user-select');
+            rightSide.style.removeProperty('pointer-events');
+
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+        };
+
+        // Attach the handler
+        resizer.addEventListener('mousedown', mouseDownHandler);
+
+        // Initial Editor Setup
+        const savedCode = localStorage.getItem(`code_${problemId}_${currentLanguage}`);
+
+        editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            lineNumbers: true,
+            theme: 'dracula',
+            mode: 'python',
+            indentUnit: 4,
+            indentWithTabs: false,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+        });
+
+        // Set initial content: Priority (Saved Code > Boilerplate)
+        if (savedCode) {
+            editor.setValue(savedCode);
+        } else {
+            editor.setValue(BOILERPLATE['python']);
+        }
+
+        // Auto-save logic
+        setInterval(() => {
+            const currentCode = editor.getValue();
+            if (currentCode.trim()) {
+                localStorage.setItem(`code_${problemId}_${currentLanguage}`, currentCode);
+            }
+        }, 2000);
+    });
+    // -----------------------
+
+    // Boilerplate code for each language
+    const BOILERPLATE = {
+        'python': `# Write your Python code here
+def solve():
+    # Read input
+    # Process
+    # Print output
+    pass
+
+if __name__ == "__main__":
+    solve()
+`,
+        'c': `#include <stdio.h>
+
+int main() {
+    // Write your C code here
+    
+    return 0;
+}
+`,
+        'cpp': `#include <iostream>
+using namespace std;
+
+int main() {
+    // Write your C++ code here
+    
+    return 0;
+}
+`,
+        'java': `import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        // Write your Java code here
+        
+    }
+}
+`
+    };
+
+    function changeLanguage() {
+        const language = document.getElementById('language').value;
+        const previousLanguage = currentLanguage;
+        currentLanguage = language;
+
+        let mode;
+        switch (language) {
+            case 'python':
+                mode = 'python';
+                break;
+            case 'c':
+            case 'cpp':
+                mode = 'text/x-c++src';
+                break;
+            case 'java':
+                mode = 'text/x-java';
+                break;
+            default:
+                mode = 'text/plain';
+        }
+
+        editor.setOption('mode', mode);
+
+        // Check for saved code or use boilerplate
+        const savedCode = localStorage.getItem(`code_${problemId}_${language}`);
+        const currentCode = editor.getValue().trim();
+        const previousBoilerplate = BOILERPLATE[previousLanguage] ? BOILERPLATE[previousLanguage].trim() : '';
+
+        if (savedCode) {
+            editor.setValue(savedCode);
+        } else if (currentCode === '' || currentCode === previousBoilerplate) {
+            editor.setValue(BOILERPLATE[language] || '');
+        }
+    }
+
+    function resetCode() {
+        if (confirm('Are you sure you want to reset the editor? This will clear your current code.')) {
+            editor.setValue(BOILERPLATE[currentLanguage] || '');
+        }
+    }
+
+    async function execute(mode) {
+        const code = editor.getValue();
+        const loading = document.getElementById('loading');
+        const testResults = document.getElementById('test-results');
+
+        if (!code.trim()) {
+            alert('Please write some code to submit');
+            return;
+        }
+
+        loading.style.display = 'flex';
+        testResults.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/execute/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    language: currentLanguage,
+                    code: code,
+                    problem_id: problemId,
+                    mode: mode
+                })
+            });
+
+            if (!response.ok) {
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    errorData = { error: 'Execution failed' };
+                }
+                throw new Error(errorData.error || 'Execution failed');
+            }
+
+            const result = await response.json();
+            loading.style.display = 'none';
+            testResults.style.display = 'block';
+
+            let html = '';
+
+            // Handle "Run" mode results (Sample cases) or Submit results
+            if (result.total_test_cases > 0) {
+                const title = mode === 'run' ? 'Sample Test Results' : 'Submission Completed';
+                const color = result.test_cases_passed === result.total_test_cases ? '#28a745' : '#ecc94b';
+
+                html += `<h4 style="color: ${color}; border-bottom: 2px solid ${color}; padding-bottom: 8px;">
+                            ${title}: ${result.test_cases_passed}/${result.total_test_cases} passed
+                         </h4>`;
+
+                if (result.test_results) {
+                    result.test_results.forEach((test, index) => {
+                        const className = test.passed ? 'test-passed' : 'test-failed';
+                        const status = test.passed ? 'PASSED' : 'FAILED';
+                        const label = test.is_sample ? '(Sample)' : (mode === 'run' ? '' : '(Hidden)');
+                        const icon = test.passed ? '✓' : '✗';
+
+                        html += `
+                        <div class="test-result-item ${className}" style="padding:10px; border-radius:4px; margin-bottom: 10px;">
+                            <div style="font-weight:bold; display:flex; justify-content:space-between;">
+                                <span>Test Case ${index + 1} ${label}</span>
+                                <span>${icon} ${status}</span>
+                            </div>
+                            <div style="margin-top:5px; font-size:0.9em; opacity:0.8;">
+                                <div>Input: <code style="background:rgba(0,0,0,0.2); padding:2px 4px;">${test.input}</code></div>
+                                <div>Expected: <code style="background:rgba(0,0,0,0.2); padding:2px 4px;">${test.expected}</code></div>
+                                <div>Actual: <code style="background:rgba(0,0,0,0.2); padding:2px 4px;">${test.actual || '(none)'}</code></div>
+                            </div>
+                        </div>
+                    `;
+                    });
+                }
+
+                if (mode === 'submit') {
+                    html += `
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button onclick="window.location.reload()" class="btn btn-secondary" style="width: 100%;">
+                                <i class="fas fa-redo"></i> Refresh to update score
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                html += '<p>Code executed successfully!</p>';
+                if (result.output) {
+                    html += `<div style="background:#2d3748; padding:10px; border-radius:4px; font-family:monospace;">${result.output}</div>`;
+                }
+            }
+
+            testResults.innerHTML = html;
+
+        } catch (error) {
+            loading.style.display = 'none';
+            testResults.style.display = 'block';
+            testResults.innerHTML = `<div class="test-result-item test-failed" style="padding:10px;">Error: ${error.message}</div>`;
+        }
+    }
+
+    function runCode() {
+        execute('run');
+    }
+
+    function submitSolution() {
+        execute('submit');
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

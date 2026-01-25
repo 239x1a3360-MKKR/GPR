@@ -1,0 +1,49 @@
+/* Custom admin CSS for Problem admin */
+
+/* Highlight test case fields */
+.inline-group .tabular tr.has_original td {
+    background-color: #f9f9f9;
+}
+
+/* Style for test case inline */
+.inline-group .tabular fieldset.module table tbody tr td {
+    padding: 8px;
+}
+
+/* Make is_sample checkbox more visible */
+.inline-group .tabular fieldset.module table tbody tr td input[type="checkbox"][name*="is_sample"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Add helper text styling */
+.help {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Style for test case input/output fields */
+.inline-group textarea[name*="input_data"],
+.inline-group textarea[name*="expected_output"] {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    width: 100%;
+    min-height: 60px;
+}
+
+/* Info box styling */
+.field-test_case_info {
+    background: #e8f4f8;
+    padding: 10px;
+    border-left: 4px solid #417690;
+    margin: 10px 0;
+}
+
+.field-test_case_info p {
+    margin: 0;
+    color: #417690;
+    font-weight: 500;
+}
+

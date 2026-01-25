@@ -1,0 +1,115 @@
+{% extends 'lab/base.html' %}
+
+{% block title %}Problems - CodeNextLab{% endblock %}
+
+{% block content %}
+<div class="problems-container">
+    <div class="problems-header">
+        <h2>Programming Problems</h2>
+        <div class="filter-section" style="display: flex; gap: 20px; align-items: center;">
+            <div class="filter-group">
+                <label for="difficulty-filter">Difficulty:</label>
+                <select id="difficulty-filter" onchange="filterProblems()">
+                    <option value="">All</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="topic-filter">Topic:</label>
+                <select id="topic-filter" onchange="filterProblems()">
+                    <option value="">All</option>
+                    {% for topic in topics %}
+                    <option value="{{ topic.id }}">{{ topic.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {% if problems %}
+    <div class="problems-table-container">
+        <table class="problems-table">
+            <thead>
+                <tr>
+                    <th>Problem Title</th>
+                    <th>Topic</th>
+                    <th>Difficulty</th>
+                    <th>Points</th>
+                    <th>Solutions</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for problem in problems %}
+                <tr>
+                    <td>
+                        <a href="{% url 'lab:problem_detail' problem.id %}" class="problem-title-link">
+                            {{ problem.title }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if problem.topic %}
+                        <span class="topic-tag">{{ problem.topic.name }}</span>
+                        {% else %}
+                        <span style="color: #cbd5e0; font-size: 0.8rem;">--</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="difficulty-badge difficulty-{{ problem.difficulty }}">
+                            {{ problem.difficulty|capfirst }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: #2d3748;">{{ problem.points }}</span>
+                    </td>
+                    <td>
+                        <span style="color: #718096; font-size: 0.9rem;">
+                            {{ problem.submissions.count }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'lab:problem_detail' problem.id %}" class="btn btn-primary"
+                            style="padding: 0.4rem 1rem; width: auto; font-size: 0.85rem;">
+                            Solve
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-problems">
+        <p>No problems available at the moment.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function filterProblems() {
+        const difficulty = document.getElementById('difficulty-filter').value;
+        const topic = document.getElementById('topic-filter').value;
+        const url = new URL(window.location.href);
+
+        if (difficulty) url.searchParams.set('difficulty', difficulty);
+        else url.searchParams.delete('difficulty');
+
+        if (topic) url.searchParams.set('topic', topic);
+        else url.searchParams.delete('topic');
+
+        window.location.href = url.toString();
+    }
+
+    // Set initial values from URL
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const difficulty = urlParams.get('difficulty');
+        const topic = urlParams.get('topic');
+
+        if (difficulty) document.getElementById('difficulty-filter').value = difficulty;
+        if (topic) document.getElementById('topic-filter').value = topic;
+    });
+</script>
+{% endblock %}

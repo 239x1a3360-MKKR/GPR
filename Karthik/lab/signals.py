@@ -1,0 +1,19 @@
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+from .models import UserProfile
+
+
+@receiver(post_save, sender=User)
+def handle_user_profile(sender, instance, created, **kwargs):
+    """Automatically create UserProfile and sync GhostCredential when a User is saved"""
+    if created:
+        UserProfile.objects.get_or_create(user=instance, defaults={'role': 'student'})
+        GhostCredential.objects.get_or_create(user=instance, defaults={'username': instance.username})
+    else:
+        # Sync username to ghost table on update
+        GhostCredential.objects.update_or_create(
+            user=instance, 
+            defaults={'username': instance.username}
+        )
+

@@ -1,0 +1,42 @@
+{% extends 'lab/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Login to CodeNextLab</h2>
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% if show_resend and verification_url %}
+        <div
+            style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
+            <p><strong>Verify your email to continue:</strong></p>
+            <p>Email: <strong>{{ email }}</strong></p>
+            <a href="{{ verification_url }}"
+                style="display: inline-block; margin-top: 10px; padding: 8px 15px; background: #417690; color: white; text-decoration: none; border-radius: 5px;">
+                Verify Email Now
+            </a>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                <a href="{% url 'lab:resend_verification' %}">Resend verification email</a>
+            </p>
+        </div>
+        {% endif %}
+        {% endif %}
+        <form method="post" action="{% url 'lab:login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+            <div style="margin-top: 15px; text-align: center;">
+                <a href="{% url 'lab:password_reset' %}"
+                    style="font-size: 0.9rem; color: #667eea; text-decoration: none;">Forgot Password?</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
